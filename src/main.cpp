@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -37,16 +38,31 @@ int main(int argc, char **argv) {
     keypad(stdscr, TRUE);
     scrollok(stdscr, TRUE);
 
+    int add_y;
+    int add_x;
+
     // mainloop
     while (true) {
+        int ch = getch();
         clear();
-        printw(file_contents_char_arr);
+        printw("%d", ch);
         refresh();
-        int ch = getchar();
-        if (ch == 113) /* "q" */ {
+        if (ch == 113) /* "q" */{
             endwin();
             break;
+        } else if (ch == 259) /* "up" */ {
+            add_y -= 1;
+        } else if (ch == 258) /* "down" */ {
+            add_y += 1;
+        } else if (ch == 260) /* "left" */ {
+            add_x -= 1;
+        } else if (ch == 261) /* "right" */ {
+            add_x += 1;
         }
+        int x;
+        int y;
+        getyx(stdscr, x, y);
+        wmove(stdscr, y + add_y, x + add_x);
     }
     return 0;
 }
