@@ -49,6 +49,20 @@ def main(stdscr, file):
             key = stdscr.getkey()
             if str(key) == "q":
                 sys.exit()
+            elif str(key) == curses.KEY_DOWN:
+                y, x = stdscr.getyx()
+                cursor.move(y + 1, x)
+                with open('file.txt', 'w+') as f:
+                    f.write('thioisajflajsdf')
+            elif str(key) == curses.KEY_UP:
+                y, x = stdscr.getyx()
+                cursor.move(y - 1, x)
+            elif str(key) == curses.KEY_LEFT:
+                y, x = stdscr.getyx()
+                cursor.move(y, x + 1)
+            elif str(key) == curses.KEY_RIGHT:
+                y, x = stdscr.getyx()
+                cursor.move(y, x - 1)
         except Exception:
             # no input
             pass
