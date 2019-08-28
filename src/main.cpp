@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
     keypad(stdscr, TRUE);
     scrollok(stdscr, TRUE);
 
+    // how far away each coord of the cursor is from its original position
     int add_y;
     int add_x;
 
@@ -45,18 +46,18 @@ int main(int argc, char **argv) {
     while (true) {
         int ch = getch();
         clear();
-        printw("%d", ch);
+        printw(file_contents_char_arr);
         refresh();
         if (ch == 113) /* "q" */{
             endwin();
             break;
-        } else if (ch == 259) /* "up" */ {
+        } else if (ch == 258) /* down arrow but scroll up */ {
             add_y -= 1;
-        } else if (ch == 258) /* "down" */ {
+        } else if (ch == 259) /* up arrow but scroll down */ {
             add_y += 1;
-        } else if (ch == 260) /* "left" */ {
+        } else if (ch == 261) /* right arrow but scroll left */ {
             add_x -= 1;
-        } else if (ch == 261) /* "right" */ {
+        } else if (ch == 260) /* left arrow but scroll right */ {
             add_x += 1;
         }
         int x;
