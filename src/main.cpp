@@ -6,10 +6,31 @@
 
 using namespace std;
 
+bool file_exists(const char *fileName) {
+    ifstream file(fileName);
+    return file.good();
+}
+
 int main(int argc, char **argv) {
     /*
     Reads a text file and displays contents to the screen 
     */
+
+   // Argument handling: 
+   if ( argc > 2 ) {
+        cout << "Sorry, only one file can be opened with the free version." << endl;
+        return 1;
+   }
+   else if (argc == 1) {
+        cout << "Specify an input file" << endl;
+        return 1;
+   }
+   else {
+       if (!file_exists(argv[1])) {
+            cout << argv[1] << " is not a file." << endl;
+            return 1;
+        }
+   }
 
     string line;
     ifstream file (argv[1]);
@@ -27,10 +48,6 @@ int main(int argc, char **argv) {
         }
     }
 
-    // convert file_contents to char array
-    char * file_contents_char_arr = new char[file_contents.length() + 1];
-    strcpy(file_contents_char_arr, file_contents.c_str());
-
     // setup screen and input
     initscr();
     cbreak();
@@ -42,11 +59,16 @@ int main(int argc, char **argv) {
     int add_y;
     int add_x;
 
+    // the text to be displayed to the screen
+    string screen_text = file_contents;
+
     // mainloop
     while (true) {
         int ch = getch();
         clear();
-        printw(file_contents_char_arr);
+        char * screen_text_char = new char[screen_text.length() + 1];
+        strcpy(screen_text_char, screen_text.c_str());
+        printw(screen_text_char);
         refresh();
         if (ch == 113) /* "q" */{
             endwin();
@@ -59,11 +81,22 @@ int main(int argc, char **argv) {
             add_x -= 1;
         } else if (ch == 260) /* left arrow but scroll right */ {
             add_x += 1;
+        } else if (ch == 20) /* ^t (find in file) */ {
+            // change bottom line of screen text to blank line
+            
+            int newline_count = 0;
+            
         }
+        
+        // wmove cursor only if x and y will be inside of window bounds;
+       
+       
         int x;
         int y;
         getyx(stdscr, x, y);
-        wmove(stdscr, y + add_y, x + add_x);
+        if ((0 <= x + add_x <= COLS) && (0 <= y + add_y <= LINES)) {
+            wmove(stdscr, y + add_y, x + add_x);
+        }
     }
     return 0;
 }
