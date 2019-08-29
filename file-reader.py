@@ -14,6 +14,10 @@ class FileText:
         # access current char in grid by grid[x][y]
         self.grid = [[' ' for _ in range(lines)] for _ in range(cols)]
 
+    @property
+    def transposed_grid(self):
+        return [[col[i] for col in self.grid] for i in range(len(self.grid[0]))]
+
     def replace(self, x, y, char):
         """replaces one char in the canvas at location (x, y)"""
         self.grid[x][y] = char
@@ -37,7 +41,7 @@ class Line:
         return ''.join(self.chars)
 
 
-def main(stdscr, file):
+def main(stdscr, file, encoding, color):
     
     def ask_to_quit(iteration, last_one):
 
@@ -49,9 +53,9 @@ def main(stdscr, file):
                 if last_one:
                     sys.exit()
                 else:
-                    return
+                    return True
             elif key == 110: # n
-                pass
+                return False
 
             stdscr.clear()
             base_string = 'Are you sure you want to quit? [y/n]'
@@ -98,9 +102,13 @@ def main(stdscr, file):
         key = stdscr.getch()
 
         if key == 5: # ^e (quit)
+            ask_last = True
             for i in range(10):
-                ask_to_quit(i, False)
-            ask_to_quit(10, True)
+                if not ask_to_quit(i, False):
+                    ask_last = False
+                    break
+            if ask_last:
+                ask_to_quit(10, True)
         
         elif key == 20: # ^t (find in file)
             file_text_display = file_text.display(lines_start, lines_stop - 1, cols_start, cols_stop)
@@ -113,9 +121,13 @@ def main(stdscr, file):
                 key = stdscr.getch()
 
                 if key == 5: # ^e (quit)
+                    ask_last = True
                     for i in range(10):
-                        ask_to_quit(i, False)
-                    ask_to_quit(10, True)
+                        if not ask_to_quit(i, False):
+                            ask_last = False
+                            break
+                    if ask_last:
+                        ask_to_quit(10, True)
 
                 elif 32 <= key < 127: # normal chars
                     if current_space < len(line.chars):
@@ -248,7 +260,7 @@ if __name__ == "__main__":
 
     try: encoding
     except NameError:
-        encoding = "binary"
+        encoding = "utf-16"
     
     try: helpScreen
     except NameError:
@@ -263,4 +275,4 @@ if __name__ == "__main__":
         os.system("less helpscreen")
         sys.exit()
 
-    curses.wrapper(main, file)
+    curses.wrapper(main, file, encoding, color)
