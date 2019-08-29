@@ -76,7 +76,6 @@ def helpSequence(num):
 
 if __name__ == "__main__":
 
-    print(argv)
 
     for i in range(len(sys.argv) - 1):
         if sys.argv[i + 1] == "-e" and sys.argv[i] != "-h":
