@@ -1,6 +1,6 @@
 import curses
 import curses.textpad
-from os.path import abspath
+from os.path import abspath, isfile
 import sys
 import time
 
@@ -153,6 +153,39 @@ def main(stdscr, file):
 
 if __name__ == "__main__":
 
-    file = sys.argv[1]
 
+    for i in range(len(sys.argv) - 1):
+        if sys.argv[i + 1] == "-h" and sys.argv[i + 2] == "-e" and sys.argv[i + 3] == "-l" and sys.argv[i + 4] == "-p" and sys.argv[i + 5] == "-m" and sys.argv[i + 6] == "-e":
+            helpScreen = True
+        elif sys.argv[i + 1] == "-e" and sys.argv[i] != "-h" and sys.argv[i] != "-m":
+            encoding = sys.argv[i + 2]
+        elif sys.argv[i + 1] == "-c":
+            color = sys.argv[i + 2]
+        elif isfile(sys.argv[i + 1]):
+            file = sys.argv[i + 1]
+
+    try: color
+    except NameError:
+        color = "rainbow"
+
+    try: encoding
+    except NameError:
+        encoding = "binary"
+    
+    try: helpScreen
+    except NameError:
+        helpScreen = False
+
+    try: file
+    except NameError:
+        print("Specify a file to be read.")
+        sys.exit()
+
+    if helpScreen:
+        os.system("less helpscreen")
+        sys.exit()
+        
+    print(file)
+    print(encoding)
+    print(color)
     curses.wrapper(main, file)
