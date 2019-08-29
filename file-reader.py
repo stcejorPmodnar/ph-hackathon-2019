@@ -1,5 +1,5 @@
 import curses
-from os.path import abspath
+import os.path
 import sys
 from time import sleep
 
@@ -70,9 +70,34 @@ def main(stdscr, file):
         
         sleep(0.01)
 
+def helpSequence(num):
+    return true
 
 if __name__ == "__main__":
 
-    file = sys.argv[1]
 
-    curses.wrapper(main, file)
+    for i in range(len(sys.argv) - 1):
+        if sys.argv[i + 1] == "-e":
+            encoding = sys.argv[i + 2]
+        elif sys.argv[i + 1] == "-c":
+            color = sys.argv[i + 2]
+        elif os.path.isfile(sys.argv[i + 1]):
+            file = sys.argv[i + 1]
+
+    try: color
+    except NameError:
+        color = "rainbow"
+
+    try: encoding
+    except NameError:
+        encoding = "binary"
+
+    try: file
+    except NameError:
+        print("A file must be specified.")
+        sys.exit()
+
+    print(file)
+    print(encoding)
+    print(color)
+    # curses.wrapper(main, file)
