@@ -1,6 +1,7 @@
 import curses
 import curses.textpad
 from os.path import abspath, isfile
+import os
 import sys
 import time
 
@@ -155,7 +156,8 @@ if __name__ == "__main__":
 
 
     for i in range(len(sys.argv) - 1):
-        if sys.argv[i + 1] == "-h" and sys.argv[i + 2] == "-e" and sys.argv[i + 3] == "-l" and sys.argv[i + 4] == "-p" and sys.argv[i + 5] == "-m" and sys.argv[i + 6] == "-e":
+        if (sys.argv[i + 1] == "-h" and sys.argv[i + 2] == "-e" and sys.argv[i + 3] == "-l"
+                and sys.argv[i + 4] == "-p" and sys.argv[i + 5] == "-m" and sys.argv[i + 6] == "-e"):
             helpScreen = True
         elif sys.argv[i + 1] == "-e" and sys.argv[i] != "-h" and sys.argv[i] != "-m":
             encoding = sys.argv[i + 2]
@@ -184,8 +186,5 @@ if __name__ == "__main__":
     if helpScreen:
         os.system("less helpscreen")
         sys.exit()
-        
-    print(file)
-    print(encoding)
-    print(color)
+
     curses.wrapper(main, file)
