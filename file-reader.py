@@ -41,8 +41,10 @@ def main(stdscr, file):
     
     def ask_to_quit(iteration, last_one):
 
-        while True:   
+        while True:
             key = stdscr.getch()
+            with open('output.txt', 'w') as f:
+                f.write(str(key))
             if key == 121: # y
                 if last_one:
                     sys.exit()
@@ -62,9 +64,7 @@ def main(stdscr, file):
 
             # catch ctrl c
     def signal_handler(sig, frame):
-            for i in range(10):
-                ask_to_quit(i, False)
-            ask_to_quit(10, True)
+            pass
     signal.signal(signal.SIGINT, signal_handler)
 
 
@@ -89,8 +89,7 @@ def main(stdscr, file):
     add_x = 0
     add_y = 0
 
-    stdscr.addstr(file_text.display(lines_start, lines_stop, cols_start, cols_stop))
-
+    stdscr.nodelay(1)
     while True:
         
         x_changed = False
@@ -207,8 +206,6 @@ def main(stdscr, file):
             if new_y > curses.LINES - 1:
                 # scroll if possible
                 if len(file_text.grid[0]) >= new_y:
-                    with open('output.txt', 'w') as f:
-                        f.write(str(new_y))
                     lines_start += 1
                     lines_stop += 1
                     add_y -= 1
