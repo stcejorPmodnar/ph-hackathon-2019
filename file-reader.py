@@ -62,9 +62,9 @@ def main(stdscr, file):
 
             time.sleep(0.01)
 
-            # catch ctrl c
+    # catch ^c
     def signal_handler(sig, frame):
-            pass
+        pass
     signal.signal(signal.SIGINT, signal_handler)
 
 
@@ -205,7 +205,7 @@ def main(stdscr, file):
         elif y_changed:
             if new_y > curses.LINES - 1:
                 # scroll if possible
-                if len(file_text.grid[0]) >= new_y:
+                if len(file_text.grid[0]) > (lines_start + new_y):
                     lines_start += 1
                     lines_stop += 1
                     add_y -= 1
