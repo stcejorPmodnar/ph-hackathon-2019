@@ -1,10 +1,14 @@
 import curses
 import curses.textpad
-from os.path import abspath, isfile
+from os.path import abspath, dirname, isfile
 import os
 import sys
 import time
 import signal
+
+
+CWD = dirname(abspath(__file__))
+ASCII_DIR = CWD + '/ascii-art'
 
 
 def convert_to_binary(i, byte_size):
@@ -207,16 +211,16 @@ def main(stdscr, file, encoding, color):
         elif key == 20: # ^t (find in file)
             find_in_file()
         
-        elif key == 117: # u
+        elif key == 259: # up arrow
             add_y -= 1
             y_changed = True
-        elif key == 100: # d
+        elif key == 258: # down arrow
             add_y += 1
             y_changed = True
-        elif key == 114: # r
+        elif key == 261: # right arrow
             add_x += 1
             x_changed = True
-        elif key == 108: # l
+        elif key == 260: # left arrow
             add_x -= 1
             x_changed = True
 
