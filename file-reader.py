@@ -133,7 +133,7 @@ def main(stdscr, file):
                 add_x += 1
                 new_x += 1
         elif y_changed:
-            if new_y > curses.LINES:
+            if new_y > curses.LINES - 1:
                 # scroll if possible
                 if len(file_text.grid[0]) >= new_y:
                     lines_start += 1
