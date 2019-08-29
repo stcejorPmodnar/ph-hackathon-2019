@@ -80,17 +80,13 @@ def main(stdscr, file):
     add_x = 0
     add_y = 0
 
-    stdscr.nodelay(1)
+    # stdscr.nodelay(1)
     while True:
         
         x_changed = False
         y_changed = False
 
         key = stdscr.getch()
-        
-        if key != -1:
-            with open('output', 'w') as f:
-                f.write(str(key))
 
         if key == 5: # ^e (quit)
             for i in range(10):
@@ -179,6 +175,7 @@ def main(stdscr, file):
         stdscr.addstr(file_text.display(lines_start, lines_stop, cols_start, cols_stop))
 
         # move cursor
+        move = True
         y, x = stdscr.getyx()
         new_x = x + add_x
         new_y = y + add_y
@@ -197,13 +194,19 @@ def main(stdscr, file):
                 add_x += 1
                 new_x += 1
         elif y_changed:
-            if new_y > curses.LINES:
+            if new_y >= curses.LINES:
                 # scroll if possible
                 if len(file_text.grid[0]) >= new_y:
+                    with open('output.txt', 'w') as f:
+                        f.write(str(new_y))
                     lines_start += 1
                     lines_stop += 1
-                add_y -= 1
-                new_y -= 1
+                    add_y -= 1
+                    new_y -= 1
+                else:  # if cursor wants to go beyond file contents
+                    move = False
+                    add_y -= 1
+                    new_y -= 1
             elif new_y < 0:
                 if lines_start > 0:
                     lines_start -= 1
@@ -211,7 +214,8 @@ def main(stdscr, file):
                 add_y += 1
                 new_y += 1
         
-        stdscr.move(new_y, new_x)
+        if move:
+            stdscr.move(new_y, new_x)
 
         stdscr.refresh()
 
