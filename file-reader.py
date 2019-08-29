@@ -79,7 +79,9 @@ def main(stdscr, file):
     add_x = 0
     add_y = 0
 
-    stdscr.nodelay(1)
+    # stdscr.nodelay(1)
+    stdscr.addstr(file_text.display(lines_start, lines_stop, cols_start, cols_stop))
+
     while True:
         
         x_changed = False
@@ -184,7 +186,7 @@ if __name__ == "__main__":
     if helpScreen:
         os.system("less helpscreen")
         sys.exit()
-        
+
     print(file)
     print(encoding)
     print(color)
