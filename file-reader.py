@@ -101,4 +101,4 @@ if __name__ == "__main__":
     print(file)
     print(encoding)
     print(color)
-    # curses.wrapper(main, file)
+    curses.wrapper(main, file)
