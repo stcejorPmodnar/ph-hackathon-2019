@@ -158,7 +158,6 @@ def main(stdscr, file, encoding, color):
             line.replace(i, char)
         
         total_display = file_text_display + '\n' + line.display
-        curses.curs_set(0)
         while True:
             key = stdscr.getch()
 
@@ -178,7 +177,6 @@ def main(stdscr, file, encoding, color):
             stdscr.addstr(total_display)
             stdscr.refresh()
             time.sleep(0.01)
-        curses.curs_set(1)
 
     lines_start = 0
     lines_stop = curses.LINES
@@ -187,8 +185,9 @@ def main(stdscr, file, encoding, color):
 
     add_x = 0
     add_y = 0
-
+    
     stdscr.nodelay(1)
+
     while True:
         
         x_changed = False
@@ -232,11 +231,15 @@ def main(stdscr, file, encoding, color):
         if x_changed:
             if new_x >= curses.COLS:
                 # scroll if possible
-                if len(file_text.grid) >= new_x:
+                if len(file_text.grid) > (cols_start + new_x):
                     cols_start += 1
                     cols_stop += 1
-                add_x -= 1
-                new_x -= 1
+                    add_x -= 1
+                    new_x -= 1
+                else:
+                    move = False
+                    add_x -= 1
+                    new_x -= 1
             elif new_x < 0:
                 if cols_start > 0:
                     cols_start -= 1
