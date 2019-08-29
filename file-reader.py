@@ -3,6 +3,7 @@ import curses.textpad
 from os.path import abspath, isfile
 import sys
 import time
+import signal
 
 
 class FileText:
@@ -57,6 +58,14 @@ def main(stdscr, file):
             stdscr.refresh()
 
             time.sleep(0.01)
+
+            # catch ctrl c
+    def signal_handler(sig, frame):
+            for i in range(10):
+                ask_to_quit(i, False)
+            ask_to_quit(10, True)
+    signal.signal(signal.SIGINT, signal_handler)
+
 
     # read file
     with open(abspath(file), 'r') as f:
