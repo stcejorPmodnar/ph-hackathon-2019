@@ -97,6 +97,71 @@ def main(stdscr, file):
                 ask_to_quit(i, False)
             ask_to_quit(10, True)
         
+        elif key == 20: # ^t (find in file)
+            file_text_display = file_text.display(lines_start, lines_stop - 1, cols_start, cols_stop)
+            line = Line(curses.COLS - 1)
+            for i, char in enumerate('FIND IN FILE:'):
+                line.replace(i, char)
+            current_space = len('FIND IN FILE:') + 1
+            pattern = ''
+            while True:
+                key = stdscr.getch()
+
+                if key == 5: # ^e (quit)
+                    for i in range(10):
+                        ask_to_quit(i, False)
+                    ask_to_quit(10, True)
+
+                elif 32 <= key < 127: # normal chars
+                    if current_space < len(line.chars):
+                        line.replace(current_space, chr(key))
+                        current_space += 1
+
+                elif key == 127: # delete
+                    if current_space > 0:
+                        line.replace(current_space - 1, ' ')
+                        current_space -= 1
+                
+                elif key == 10: # enter
+                    pattern = ''.join(line.chars[len('FIND IN FILE:') + 1:current_space])
+                    break
+
+                total_display = file_text_display + '\n' + line.display
+                stdscr.clear()
+                stdscr.addstr(total_display)
+
+                stdscr.move(curses.LINES - 1, current_space)
+
+                stdscr.refresh()
+
+                time.sleep(0.01)
+
+            lines = []
+            for i, l in enumerate(['\n'.join([''.join(i)]) for i in file_text.transposed_grid]):
+                if pattern in l:
+                    lines.append(i)
+
+            for i in range(len(line.chars)):
+                line.replace(i, ' ')
+
+            string = 'Found in lines: ' + ', '.join([str(i + 1) for i in lines])
+            for i, char in enumerate(string):
+                line.replace(i, char)
+            
+            total_display = file_text_display + '\n' + line.display
+            curses.curs_set(0)
+            while True:
+                key = stdscr.getch()
+
+                if key == 24: # ^x
+                    break
+
+                stdscr.clear()
+                stdscr.addstr(total_display)
+                stdscr.refresh()
+                time.sleep(0.01)
+            curses.curs_set(1)
+        
         elif key == 117: # u
             add_y -= 1
             y_changed = True
