@@ -4,6 +4,7 @@ from os.path import abspath, isfile
 import os
 import sys
 import time
+import signal
 
 
 class FileText:
@@ -59,6 +60,14 @@ def main(stdscr, file):
 
             time.sleep(0.01)
 
+            # catch ctrl c
+    def signal_handler(sig, frame):
+            for i in range(10):
+                ask_to_quit(i, False)
+            ask_to_quit(10, True)
+    signal.signal(signal.SIGINT, signal_handler)
+
+
     # read file
     with open(abspath(file), 'r') as f:
         file_contents = f.read()
@@ -80,7 +89,8 @@ def main(stdscr, file):
     add_x = 0
     add_y = 0
 
-    # stdscr.nodelay(1)
+    stdscr.addstr(file_text.display(lines_start, lines_stop, cols_start, cols_stop))
+
     while True:
         
         x_changed = False
@@ -194,7 +204,7 @@ def main(stdscr, file):
                 add_x += 1
                 new_x += 1
         elif y_changed:
-            if new_y >= curses.LINES:
+            if new_y > curses.LINES - 1:
                 # scroll if possible
                 if len(file_text.grid[0]) >= new_y:
                     with open('output.txt', 'w') as f:
