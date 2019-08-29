@@ -127,7 +127,7 @@ def main(stdscr, file, encoding, color):
                     current_space += 1
 
             elif key == 127: # delete
-                if current_space > 0:
+                if current_space > len('FIND IN FILE:') + 1:
                     line.replace(current_space - 1, ' ')
                     current_space -= 1
             
