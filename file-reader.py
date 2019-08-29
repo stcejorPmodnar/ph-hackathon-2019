@@ -1,5 +1,6 @@
 import curses
 import os.path
+from os.path import abspath
 import sys
 from time import sleep
 
@@ -75,9 +76,10 @@ def helpSequence(num):
 
 if __name__ == "__main__":
 
+    print(argv)
 
     for i in range(len(sys.argv) - 1):
-        if sys.argv[i + 1] == "-e":
+        if sys.argv[i + 1] == "-e" and sys.argv[i] != "-h":
             encoding = sys.argv[i + 2]
         elif sys.argv[i + 1] == "-c":
             color = sys.argv[i + 2]
@@ -94,7 +96,7 @@ if __name__ == "__main__":
 
     try: file
     except NameError:
-        print("A file must be specified.")
+        print("Specify a file to be read.")
         sys.exit()
 
     print(file)
