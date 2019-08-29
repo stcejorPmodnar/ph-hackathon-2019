@@ -7,6 +7,12 @@ import time
 import signal
 
 
+def convert_to_binary(i, byte_size):
+    binary = bin(i)[2:]
+    zeroes = ''.join(['0' for _ in range(byte_size - len(binary))])
+    return zeroes + binary
+
+
 class FileText:
     """An object to represent the text being displayed on the screen"""
 
@@ -47,8 +53,6 @@ def main(stdscr, file, encoding, color):
 
         while True:
             key = stdscr.getch()
-            with open('output.txt', 'w') as f:
-                f.write(str(key))
             if key == 121: # y
                 if last_one:
                     sys.exit()
@@ -73,11 +77,21 @@ def main(stdscr, file, encoding, color):
 
 
     # read file
-    with open(abspath(file), 'r') as f:
-        file_contents = f.read()
+    binary = False
+    try:
+        with open(abspath(file), 'r', encoding=encoding) as f:
+            file_contents = f.read()
+    except UnicodeDecodeError:
+        with open(abspath(file), 'rb') as f:
+            file_contents = ' '.join(convert_to_binary(i, 16) for i in list(f.read()))
+        binary = True
     
     # create FileText object with grid size exactly large enough to display entire file contents
-    file_lines = file_contents.split('\n')
+    if binary:
+        file_lines = [file_contents[i:i + curses.COLS - 1]
+                      for i in range(0, len(file_contents), curses.COLS - 1)]
+    else:
+        file_lines = file_contents.split('\n')
     dims = [len(file_lines), max([len(line) for line in file_lines])]
     file_text = FileText(*dims)
 
