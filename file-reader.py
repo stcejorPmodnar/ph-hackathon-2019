@@ -174,7 +174,8 @@ def main(stdscr, file, encoding, color):
     add_x = 0
     add_y = 0
 
-    stdscr.nodelay(1)
+    # stdscr.nodelay(1)
+    stdscr.addstr(file_text.display(lines_start, lines_stop, cols_start, cols_stop))
     while True:
         
         x_changed = False
