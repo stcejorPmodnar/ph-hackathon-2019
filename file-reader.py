@@ -6,6 +6,8 @@ import sys
 import time
 import signal
 
+from separate_mainloops import ask_to_quit, find_in_file, sign_up_prompt
+
 
 CWD = dirname(abspath(__file__))
 ASCII_DIR = CWD + '/ascii-art'
@@ -52,33 +54,13 @@ class Line:
 
 
 def main(stdscr, file, encoding, color):
-    
-    def ask_to_quit(iteration, last_one):
-
-        while True:
-            key = stdscr.getch()
-            if key == 121: # y
-                if last_one:
-                    sys.exit()
-                else:
-                    return True
-            elif key == 110: # n
-                return False
-
-            stdscr.clear()
-            base_string = 'Are you sure you want to quit? [y/n]'
-            added_sures = ''.join(['you\'re sure ' for _ in range(iteration)])
-            final_string = base_string[:13] + added_sures + base_string[13:]
-            stdscr.addstr(final_string)
-            stdscr.refresh()
-
-            time.sleep(0.01)
 
     # catch ^c
     def signal_handler(sig, frame):
         pass
     signal.signal(signal.SIGINT, signal_handler)
 
+    stdscr.nodelay(1)
     lines_start = 0
     lines_stop = curses.LINES
     cols_start = 0
@@ -97,27 +79,8 @@ def main(stdscr, file, encoding, color):
             for x, char in enumerate(line):
                 popup_text.replace(x, y, char)
 
-        stdscr.nodelay(1)
-        while True:
-            key = getch()
+        sign_up_prompt(stdscr, curses.LINES, curses.COLS, popup_text)
 
-            if key == 5: # ^e (quit)
-                ask_last = True
-                for i in range(10):
-                    if not ask_to_quit(i, False):
-                        ask_last = False
-                        break
-                if ask_last:
-                    ask_to_quit(10, True)
-            
-            elif key == 97:  # a
-                pass
-
-            elif key == 98:  # b
-                pass
-
-            time.sleep(0.01)
-    
     # read file
     binary = False
     try:
@@ -127,6 +90,7 @@ def main(stdscr, file, encoding, color):
         with open(abspath(file), 'rb') as f:
             file_contents = ' '.join(convert_to_binary(i, 16) for i in list(f.read()))
         binary = True
+
     
     # create FileText object with grid size exactly large enough to display entire file contents
     if binary:
@@ -142,85 +106,6 @@ def main(stdscr, file, encoding, color):
         for x, char in enumerate(line):
             file_text.replace(x, y, char)
 
-    def find_in_file():
-        file_text_display = file_text.display(lines_start, lines_stop - 1, cols_start, cols_stop)
-        line = Line(curses.COLS - 1)
-        for i, char in enumerate('FIND IN FILE:'):
-            line.replace(i, char)
-        current_space = len('FIND IN FILE:') + 1
-        pattern = ''
-        while True:
-            key = stdscr.getch()
-
-            if key == 24: # ^x
-                return
-
-            elif key == 5: # ^e (quit)
-                ask_last = True
-                for i in range(10):
-                    if not ask_to_quit(i, False):
-                        ask_last = False
-                        break
-                if ask_last:
-                    ask_to_quit(10, True)
-
-            elif 32 <= key < 127: # normal chars
-                if current_space < len(line.chars):
-                    line.replace(current_space, chr(key))
-                    current_space += 1
-
-            elif key == 127: # delete
-                if current_space > len('FIND IN FILE:') + 1:
-                    line.replace(current_space - 1, ' ')
-                    current_space -= 1
-            
-            elif key == 10: # enter
-                pattern = ''.join(line.chars[len('FIND IN FILE:') + 1:current_space])
-                break
-
-            total_display = file_text_display + '\n' + line.display
-            stdscr.clear()
-            stdscr.addstr(total_display)
-
-            stdscr.move(curses.LINES - 1, current_space)
-
-            stdscr.refresh()
-
-            time.sleep(0.01)
-
-        lines = []
-        for i, l in enumerate(['\n'.join([''.join(i)]) for i in file_text.transposed_grid]):
-            if pattern in l:
-                lines.append(i)
-
-        for i in range(len(line.chars)):
-            line.replace(i, ' ')
-
-        string = 'Found in lines: ' + ', '.join([str(i + 1) for i in lines])
-        for i, char in enumerate(string):
-            line.replace(i, char)
-        
-        total_display = file_text_display + '\n' + line.display
-        while True:
-            key = stdscr.getch()
-
-            if key == 24: # ^x
-                return
-
-            elif key == 5: # ^e (quit)
-                ask_last = True
-                for i in range(10):
-                    if not ask_to_quit(i, False):
-                        ask_last = False
-                        break
-                if ask_last:
-                    ask_to_quit(10, True)
-
-            stdscr.clear()
-            stdscr.addstr(total_display)
-            stdscr.refresh()
-            time.sleep(0.01)
-
     add_x = 0
     add_y = 0
 
@@ -234,14 +119,15 @@ def main(stdscr, file, encoding, color):
         if key == 5: # ^e (quit)
             ask_last = True
             for i in range(10):
-                if not ask_to_quit(i, False):
+                if not ask_to_quit(stdscr, curses.LINES, curses.COLS, i, False):
                     ask_last = False
                     break
             if ask_last:
-                ask_to_quit(10, True)
+                ask_to_quit(stdscr, curses.LINES, curses.COLS, 10, True)
         
         elif key == 20: # ^t (find in file)
-            find_in_file()
+            find_in_file(stdscr, curses.LINES, curses.COLS,
+                         lines_start, lines_stop, cols_start, cols_stop)
         
         elif key == 259: # up arrow
             add_y -= 1
