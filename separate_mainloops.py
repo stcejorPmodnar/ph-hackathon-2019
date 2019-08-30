@@ -41,6 +41,14 @@ class InputLine:
         return ''.join(self.chars)
 
 
+def compile_screen(stdscr):
+    """Screen that provides options for compiling code in file"""
+
+
+def interpret_screen(stdscr):
+    """Screen that provides options for interpreting code in file"""
+
+
 def default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, prompt):
 
     if key == 5: # ^e (quit)
