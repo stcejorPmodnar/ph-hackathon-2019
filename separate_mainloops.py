@@ -1,6 +1,7 @@
 import time
 import sys
 import os.path
+import string
 
 
 USER_SECRETS = """{
@@ -38,7 +39,7 @@ def default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, promp
             current_space += 1
 
     elif key == 127: # delete
-        if current_space > len('USERNAME:') + 1:
+        if current_space > len(prompt) + 1:
             line.replace(current_space - 1, ' ')
             current_space -= 1
 
@@ -148,7 +149,7 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
                    lines_start, lines_stop, cols_start, cols_stop):
     """Interface to be returned when user tries to open file over 1kb"""
 
-    def ask_for_user_secrets():
+    def ask_for_user_secrets(validation=None):
         popup_text_display = popup_text.display(
                 lines_start, lines_stop - 1,
                 cols_start, cols_stop)
@@ -187,12 +188,50 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
 
         current_space = len('PASSWORD:') + 1
         password = ''
+        entered_password_chars = []
         while True:
             key = stdscr.getch()
-            current_space = default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, 'PASSWORD:')
+
+            if key == 5: # ^e (quit)
+                ask_last = True
+                for i in range(10):
+                    if not ask_to_quit(stdscr, lines, cols, i, False):
+                        ask_last = False
+                        break
+                if ask_last:
+                    ask_to_quit(stdscr, lines, cols, 10, True)
+
+            elif 32 <= key < 127: # normal chars
+                if current_space < len(line.chars):
+                    line.replace(current_space, '*')
+                    entered_password_chars.append(chr(key))
+                    current_space += 1
+
+            elif key == 127: # delete
+                if current_space > len('PASSWORD:') + 1:
+                    line.replace(current_space - 1, ' ')
+                    current_space -= 1
 
             if key == 10:  # enter
-                password = ''.join(line.chars[len('PASSWORD:') + 1:current_space])
+                password = ''.join(entered_password_chars)
+                if validation:
+                    validation_output = validation(password)
+                    if validation_output != 'good':
+                        while True:
+                            key = stdscr.getch()
+                            if key == 5: # ^e (quit)
+                                ask_last = True
+                                for i in range(10):
+                                    if not ask_to_quit(stdscr, lines, cols, i, False):
+                                        ask_last = False
+                                        break
+                                if ask_last:
+                                    ask_to_quit(stdscr, lines, cols, 10, True)
+                            stdscr.clear()
+                            try:
+                                stdscr.addstr(validation_output + '\nPress ^e to exit the program.')
+                            except Exception:
+                                raise Exception('Terminal window is too small')
                 break
             
             total_display = popup_text_display + '\n' + line.display
@@ -223,7 +262,41 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
                 ask_to_quit(stdscr, lines, cols, 10, True)
         
         elif key == 97:  # a
-            user_secrets = ask_for_user_secrets()
+            def validate_password(password):
+                PASSWORD_MESSAGE = """Invalid password. Password must:
+ - contain at least one capital letter
+ - contain at least one number
+ - contain at least one character that is neither a letter nor a number
+ - be at least 10 characters long
+ - have at least one character that is repeated more than once
+ - not have any whitespace"""
+                if set(password) & set(string.ascii_uppercase) == set():
+                    return PASSWORD_MESSAGE
+
+                if set(password) & set(string.digits) == set():
+                    return PASSWORD_MESSAGE
+
+                if set(password) & set(string.digits + string.ascii_letters):
+                    return PASSWORD_MESSAGE
+
+                if len(password) < 10:
+                    return PASSWORD_MESSAGE
+
+                char_occurrences = {}
+                for char in password:
+                    if char not in char_occurrences.keys():
+                        char_occurrences[char] = len([i for i in password if i == char])
+                no_repeats = True
+                for count in char_occurrences.values():
+                    if count > 1:
+                        no_repeats = False
+                        break
+                if no_repeats:
+                    return PASSWORD_MESSAGE
+
+                return 'good'
+
+            user_secrets = ask_for_user_secrets(validation=validate_password)
 
             with open('user_secrets.json', 'w+') as f:
                 f.write(user_secrets)
@@ -236,6 +309,8 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
                 real_user_secrets = f.read()
 
             if user_secrets != real_user_secrets and os.path.isfile('user_secrets.json'):
+                with open('output', 'w') as f:
+                    f.write(user_secrets + '\n' + real_user_secrets)
                 while True:
                     key = stdscr.getch()
 
@@ -251,7 +326,7 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
                     stdscr.clear()
                     try:
                         stdscr.addstr('Username or password was incorrect. \
-                            Press ^e to exit the program and try again later.')
+Press ^e to exit the program and try again later.')
                     except Exception:
                         raise Exception('Terminal window is too small')
                     
