@@ -41,6 +41,48 @@ class InputLine:
         return ''.join(self.chars)
 
 
+def popup(stdscr, filename, lines, cols):
+    """Displays popup until q is pressed"""
+
+    path = os.path.abspath(filename)
+    with open(path, 'r') as f:
+        ascii_art = f.read()
+
+    ascii_art_lines = ascii_art.split('\n')
+
+    ascii_file_text = FileText(
+        len(ascii_art_lines),
+        max([len(i) for i in ascii_art_lines]),
+        ascii_art)
+
+    for y, line in enumerate(ascii_art_lines):
+        for x, char in enumerate(line):
+            ascii_file_text.replace(x, y, char)
+
+    while True:
+        key = stdscr.getch()
+
+        if key == 5: # ^e (quit)
+            ask_last = True
+            for i in range(10):
+                if not ask_to_quit(stdscr, lines, cols, i, False):
+                    ask_last = False
+                    break
+            if ask_last:
+                ask_to_quit(stdscr, lines, cols, 10, True)
+
+        elif key == 113:  # q (exit popup)
+            return
+
+        stdscr.clear()
+        try:
+            stdscr.addstr(ascii_file_text.display(0, lines, 0, cols - 1))
+        except Exception:
+            raise Exception('Terminal window is too small')
+
+        stdscr.refresh()
+        time.sleep(0.01)
+
 def compile_screen(stdscr):
     """Screen that provides options for compiling code in file"""
 

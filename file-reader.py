@@ -6,15 +6,18 @@ import sys
 import time
 import signal
 import webbrowser
+import random
 
 from separate_mainloops import (
     ask_to_quit, find_in_file, 
     sign_up_prompt, FileText,
-    compile_screen, interpret_screen)
+    compile_screen, interpret_screen,
+    popup)
 
 
 CWD = dirname(abspath(__file__))
 ASCII_DIR = CWD + '/ascii-art'
+POPUPS = ['ascii-art/popups/' + i for i in os.listdir(ASCII_DIR + '/popups')]
 
 
 def convert_to_binary(i, byte_size):
@@ -180,8 +183,16 @@ UTF-16 [a]\tASCII [b]\tUTF-8 [c]")
     add_x = 0
     add_y = 0
 
+    # list contains 1000 items and only 1 of them is True.
+    # Meaning that a popup should come about every 10 seconds.
+    popup_or_no = [True] + [False for _ in range(999)]
+
+    # main mainloop (for actually viewing file contents)
     while True:
         
+        if random.choice(popup_or_no):
+            popup(stdscr, random.choice(POPUPS), curses.LINES, curses.COLS)
+
         x_changed = False
         y_changed = False
 
