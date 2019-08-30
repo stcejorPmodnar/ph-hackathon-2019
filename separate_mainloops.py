@@ -1,4 +1,5 @@
 import time
+import sys
 
 
 def ask_to_quit(stdscr, lines, cols, iteration, last_one):
@@ -19,7 +20,11 @@ def ask_to_quit(stdscr, lines, cols, iteration, last_one):
         base_string = 'Are you sure you want to quit? [y/n]'
         added_sures = ''.join(['you\'re sure ' for _ in range(iteration)])
         final_string = base_string[:13] + added_sures + base_string[13:]
-        stdscr.addstr(final_string)
+        final_lines = [final_string[i:i + cols] for i in range(0, len(final_string), cols)]
+        try:
+            stdscr.addstr('\n'.join(final_lines))
+        except Exception:
+            raise Exception('Terminal window is too small')
         stdscr.refresh()
 
         time.sleep(0.01)
@@ -66,7 +71,10 @@ def find_in_file(stdscr, lines, cols, lines_start,
 
         total_display = file_text_display + '\n' + line.display
         stdscr.clear()
-        stdscr.addstr(total_display)
+        try:
+            stdscr.addstr(total_display)
+        except Exception:
+            raise Exception('Terminal window is too small')
 
         stdscr.move(lines - 1, current_space)
 
@@ -103,7 +111,10 @@ def find_in_file(stdscr, lines, cols, lines_start,
                 ask_to_quit(stdscr, 10, True)
 
         stdscr.clear()
-        stdscr.addstr(total_display)
+        try:
+            stdscr.addstr(total_display)
+        except Exception:
+            raise Exception('Terminal window is too small')
         stdscr.refresh()
         time.sleep(0.01)
 

@@ -143,7 +143,11 @@ def main(stdscr, file, encoding, color):
             x_changed = True
 
         stdscr.clear()
-        stdscr.addstr(file_text.display(lines_start, lines_stop, cols_start, cols_stop))
+        try:
+            stdscr.addstr(file_text.display(lines_start, lines_stop,
+                                            cols_start, cols_stop))
+        except Exception:
+            raise Exception('Terminal window is too small')
 
         # move cursor
         move = True
