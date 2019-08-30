@@ -5,7 +5,6 @@ import os
 import sys
 import time
 import signal
-import webbrowser
 import random
 
 from separate_mainloops import (
@@ -88,12 +87,7 @@ UTF-16 [a]\tASCII [b]\tUTF-8 [c]")
                 ask_to_quit(stdscr, curses.LINES, curses.COLS, 10, True)
         
         elif key == 121:  # y
-            with open(file, 'r', encoding=encoding) as f:
-                file_contents = f.read()
-            html_file = file.split('.')[0] + '.html'
-            with open(html_file, 'w+') as f:
-                f.write(file_contents)
-            webbrowser.open('file://' + abspath(html_file))
+            os.system(f'open -a "Google Chrome" {abspath(file)}')
             break
         
         elif key == 110:  # n
