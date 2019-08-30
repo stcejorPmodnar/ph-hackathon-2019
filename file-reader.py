@@ -203,23 +203,19 @@ UTF-16 [a]\tASCII [b]\tUTF-8 [c]")
 
 if __name__ == "__main__":
 
-
-    for i in range(len(sys.argv) - 1):
-        if (sys.argv[i] == "-h"):
-            helpScreen = True
-        elif isfile(sys.argv[i + 1]):
-            file = sys.argv[i + 1]
-    
-    try: helpScreen
-    except NameError:
-        helpScreen = False
-
-    try: file
-    except NameError:
-        print("Specify a file to be read.")
+    try:
+        ipt = sys.argv[1]
+    except IndexError:
+        print('No input file specified. Use -h flag for more information on usage.')
         sys.exit()
 
-    if helpScreen:
+    if ipt == '-h':
+        help_screen = True
+    else:
+        file = ipt
+        help_screen = False
+
+    if help_screen:
         os.system("less helpscreen")
         sys.exit()
 
