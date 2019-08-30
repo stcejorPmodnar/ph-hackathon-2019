@@ -19,7 +19,7 @@ def convert_to_binary(i, byte_size):
     return zeroes + binary
 
 
-def main(stdscr, file, encoding, color):
+def main(stdscr, file):
 
     # catch ^c
     def signal_handler(sig, frame):
@@ -31,6 +31,42 @@ def main(stdscr, file, encoding, color):
     lines_stop = curses.LINES
     cols_start = 0
     cols_stop = curses.COLS - 1
+
+    # ask for encoding
+    while True:
+        key = stdscr.getch()
+
+        if key == 5: # ^e (quit)
+            ask_last = True
+            for i in range(10):
+                if not ask_to_quit(stdscr, curses.LINES, curses.COLS, i, False):
+                    ask_last = False
+                    break
+            if ask_last:
+                ask_to_quit(stdscr, curses.LINES, curses.COLS, 10, True)
+
+        elif key == 97:  # a
+            encoding = 'utf-16'
+            break
+
+        elif key == 98:  # b
+            encoding = 'ascii'
+            break
+
+        elif key == 99:  # c
+            encoding = 'utf-8'
+            break
+        
+        stdscr.clear()
+        try:
+            stdscr.addstr("What encoding would you like to open this file in?\n\
+(If the file can not be read with that encoding, it will be displayed in binary)\n\
+UTF-16 [a]\tASCII [b]\tUTF-8 [c]")
+        except Exception:
+            raise Exception("Terminal window is too small")
+        stdscr.refresh()
+        time.sleep(0.01)
+
 
     # display sign up screen if file size is over 1 kb
     if os.stat(abspath(file)).st_size > 1000:
@@ -169,23 +205,10 @@ if __name__ == "__main__":
 
 
     for i in range(len(sys.argv) - 1):
-        if (sys.argv[i + 1] == "-h" and sys.argv[i + 2] == "-e" and sys.argv[i + 3] == "-l"
-                and sys.argv[i + 4] == "-p" and sys.argv[i + 5] == "-m" and sys.argv[i + 6] == "-e"):
+        if (sys.argv[i] == "-h"):
             helpScreen = True
-        elif sys.argv[i + 1] == "-e" and sys.argv[i] != "-h" and sys.argv[i] != "-m":
-            encoding = sys.argv[i + 2]
-        elif sys.argv[i + 1] == "-c":
-            color = sys.argv[i + 2]
         elif isfile(sys.argv[i + 1]):
             file = sys.argv[i + 1]
-
-    try: color
-    except NameError:
-        color = "rainbow"
-
-    try: encoding
-    except NameError:
-        encoding = "utf-16"
     
     try: helpScreen
     except NameError:
@@ -200,4 +223,4 @@ if __name__ == "__main__":
         os.system("less helpscreen")
         sys.exit()
 
-    curses.wrapper(main, file, encoding, color)
+    curses.wrapper(main, file)
