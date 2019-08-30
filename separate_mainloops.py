@@ -1,5 +1,6 @@
 import time
 import sys
+import os.path
 
 
 USER_SECRETS = """{
@@ -146,6 +147,69 @@ def find_in_file(stdscr, lines, cols, lines_start,
 def sign_up_prompt(stdscr, lines, cols, popup_text,
                    lines_start, lines_stop, cols_start, cols_stop):
     """Interface to be returned when user tries to open file over 1kb"""
+
+    def ask_for_user_secrets():
+        popup_text_display = popup_text.display(
+                lines_start, lines_stop - 1,
+                cols_start, cols_stop)
+        line = InputLine(cols - 1)
+        for i, char in enumerate('USERNAME:'):
+            line.replace(i, char)
+        
+        current_space = len('USERNAME:') + 1
+        username = ''
+        while True:
+            key = stdscr.getch()
+
+            current_space = default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, 'USERNAME:')
+            
+            if key == 10:  # enter
+                username = ''.join(line.chars[len('USERNAME:') + 1:current_space])
+                break
+            
+            total_display = popup_text_display + '\n' + line.display
+            stdscr.clear()
+            try:
+                stdscr.addstr(total_display)
+            except Exception:
+                raise Exception('Terminal window is too small')
+
+            stdscr.move(len(popup_text.grid[0]), current_space)
+
+            stdscr.refresh()
+            time.sleep(0.01)
+        
+        for i in range(len(line.chars)):
+            line.replace(i, ' ')
+
+        for i, char in enumerate('PASSWORD:'):
+            line.replace(i, char)
+
+        current_space = len('PASSWORD:') + 1
+        password = ''
+        while True:
+            key = stdscr.getch()
+            current_space = default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, 'PASSWORD:')
+
+            if key == 10:  # enter
+                password = ''.join(line.chars[len('PASSWORD:') + 1:current_space])
+                break
+            
+            total_display = popup_text_display + '\n' + line.display
+            stdscr.clear()
+            try:
+                stdscr.addstr(total_display)
+            except Exception:
+                raise Exception('Terminal window is too small')
+
+            stdscr.move(len(popup_text.grid[0]), current_space)
+            stdscr.refresh()
+            time.sleep(0.01)
+
+        user_secrets = USER_SECRETS % (username, password)
+
+        return user_secrets
+
     while True:
         key = stdscr.getch()
 
@@ -159,72 +223,42 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
                 ask_to_quit(stdscr, lines, cols, 10, True)
         
         elif key == 97:  # a
-            
-            popup_text_display = popup_text.display(
-                lines_start, lines_stop - 1,
-                cols_start, cols_stop)
-            line = InputLine(cols - 1)
-            for i, char in enumerate('USERNAME:'):
-                line.replace(i, char)
-            
-            current_space = len('USERNAME:') + 1
-            username = ''
-            while True:
-                key = stdscr.getch()
-
-                current_space = default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, 'USERNAME:')
-                
-                if key == 10:  # enter
-                    username = ''.join(line.chars[len('USERNAME:') + 1:current_space])
-                    break
-                
-                total_display = popup_text_display + '\n' + line.display
-                stdscr.clear()
-                try:
-                    stdscr.addstr(total_display)
-                except Exception:
-                    raise Exception('Terminal window size is too small')
-
-                stdscr.move(len(popup_text.grid[0]), current_space)
-
-                stdscr.refresh()
-                time.sleep(0.01)
-            
-            for i in range(len(line.chars)):
-                line.replace(i, ' ')
-
-            for i, char in enumerate('PASSWORD:'):
-                line.replace(i, char)
-
-            current_space = len('PASSWORD:') + 1
-            password = ''
-            while True:
-                key = stdscr.getch()
-                current_space = default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, 'PASSWORD:')
-
-                if key == 10:  # enter
-                    password = ''.join(line.chars[len('PASSWORD:') + 1:current_space])
-                    return
-                
-                total_display = popup_text_display + '\n' + line.display
-                stdscr.clear()
-                try:
-                    stdscr.addstr(total_display)
-                except Exception:
-                    raise Exception('Terminal window size is too small')
-
-                stdscr.move(len(popup_text.grid[0]), current_space)
-                stdscr.refresh()
-                time.sleep(0.01)
-
-            user_secrets = USER_SECRETS % (username, password)
+            user_secrets = ask_for_user_secrets()
 
             with open('user_secrets.json', 'w+') as f:
                 f.write(user_secrets)
 
 
         elif key == 98:  # b
-            pass
+            user_secrets = ask_for_user_secrets()
+            real_user_secrets = ''
+            with open('user_secrets.json', 'r') as f:
+                real_user_secrets = f.read()
+
+            if user_secrets != real_user_secrets and os.path.isfile('user_secrets.json'):
+                while True:
+                    key = stdscr.getch()
+
+                    if key == 5: # ^e (quit)
+                        ask_last = True
+                        for i in range(10):
+                            if not ask_to_quit(stdscr, lines, cols, i, False):
+                                ask_last = False
+                                break
+                        if ask_last:
+                            ask_to_quit(stdscr, lines, cols, 10, True)
+
+                    stdscr.clear()
+                    try:
+                        stdscr.addstr('Username or password was incorrect. \
+                            Press ^e to exit the program and try again later.')
+                    except Exception:
+                        raise Exception('Terminal window is too small')
+                    
+                    stdscr.refresh()
+                    time.sleep(0.01)
+            else:
+                return
 
         stdscr.clear()
         try:
