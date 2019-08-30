@@ -2,12 +2,12 @@ import time
 import sys
 import os.path
 import string
+import json
+
+from encrypt import encrypt, decrypt
 
 
-USER_SECRETS = """{
-    "username": "%s",
-    "password": "%s"
-}"""
+USER_SECRETS = '{"username": "%s","password": "%s"}'
 
 
 class InputLine:
@@ -245,7 +245,7 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
             stdscr.refresh()
             time.sleep(0.01)
 
-        user_secrets = USER_SECRETS % (username, password)
+        user_secrets = USER_SECRETS % (username, encrypt(password))
 
         return user_secrets
 
@@ -265,7 +265,7 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
             def validate_password(password):
                 PASSWORD_MESSAGE = """Invalid password. Password must:
  - contain at least one capital letter
- - contain at least one number
+ - contain at least one digit
  - contain at least one character that is neither a letter nor a number
  - be at least 10 characters long
  - have at least one character that is repeated more than once
@@ -276,7 +276,7 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
                 if set(password) & set(string.digits) == set():
                     return PASSWORD_MESSAGE
 
-                if set(password) & set(string.digits + string.ascii_letters):
+                if set(password) & set(string.digits + string.ascii_letters) == set():
                     return PASSWORD_MESSAGE
 
                 if len(password) < 10:
@@ -301,14 +301,17 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
             with open('user_secrets.json', 'w+') as f:
                 f.write(user_secrets)
 
+            return
+
 
         elif key == 98:  # b
             user_secrets = ask_for_user_secrets()
             real_user_secrets = ''
             with open('user_secrets.json', 'r') as f:
                 real_user_secrets = f.read()
-
-            if user_secrets != real_user_secrets and os.path.isfile('user_secrets.json'):
+            with open('output', 'w') as f:
+                f.write(user_secrets)
+            if decrypt(json.loads(user_secrets)["password"]) != decrypt(json.loads(real_user_secrets)["password"]) and os.path.isfile('user_secrets.json'):
                 with open('output', 'w') as f:
                     f.write(user_secrets + '\n' + real_user_secrets)
                 while True:
