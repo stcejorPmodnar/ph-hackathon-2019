@@ -10,6 +10,25 @@ from encrypt import encrypt, decrypt
 USER_SECRETS = '{"username": "%s","password": "%s"}'
 
 
+class FileText:
+    """An object to represent the text being displayed on the screen"""
+
+    def __init__(self, lines, cols, real_text):
+        # access current char in grid by grid[x][y]
+        self.grid = [[' ' for _ in range(lines)] for _ in range(cols)]
+        self.real_text = real_text
+
+    def replace(self, x, y, char):
+        """replaces one char in the canvas at location (x, y)"""
+        self.grid[x][y] = char
+
+    def display(self, lines_start, lines_stop, cols_start, cols_stop):
+        """Displays a certain section of the text"""
+        transposed = [[col[i] for col in self.grid[cols_start:cols_stop]]
+                      for i in list(range(len(self.grid[0])))[lines_start:lines_stop]]
+        return '\n'.join([''.join(line) for line in transposed])
+
+
 class InputLine:
     def __init__(self, length):
         self.chars = [' ' for _ in range(length)]
@@ -103,27 +122,63 @@ def find_in_file(stdscr, lines, cols, lines_start,
         except Exception:
             raise Exception('Terminal window is too small')
 
-        stdscr.move(len(file_text.grid[0]), current_space)
+        if len(file_text.grid[0]) > lines - 1:
+            stdscr.move(lines - 1, current_space)
+        else:
+            stdscr.move(len(file_text.grid[0]))
 
         stdscr.refresh()
 
         time.sleep(0.01)
 
-    lines = []
-    for i, l in enumerate(['\n'.join([''.join(i)]) for i in file_text.transposed_grid]):
-        if pattern in l:
-            lines.append(i)
-
-    for i in range(len(line.chars)):
-        line.replace(i, ' ')
-
-    string = 'Found in lines: ' + ', '.join([str(i + 1) for i in lines])
-    for i, char in enumerate(string):
-        line.replace(i, char)
+    # search for all groups of words in lines
+    # (credit goes to my mom for coming up with this idea for the ui overengineering)
+    pattern_lines = {}
+    words = pattern.split(' ')
+    combinations = []
+    for n in range(len(words)):
+        groups = [[words[i:i + n] for i in range(x, len(words), n)] for x in range(n)]
+        for group in groups:
+            for g in group:
+                if len(g) == n:
+                    combinations.append(' '.join(g))
     
-    total_display = file_text_display + '\n' + line.display
+    for combination in combinations:
+        for ln, l in enumerate(file_text.real_text.split('\n')):
+            if combination in l:
+                if combination in list(pattern_lines.keys()):
+                    pattern_lines[combination].append(f'{l} ({ln})')
+                else:
+                    pattern_lines[combination] = [f'{l} ({ln})']
+
+    if pattern_lines != {}:  # there were lines containing at least one word in the search
+        string_groups = []
+        for combination in pattern_lines.keys():
+            group_lines = [f'Lines containing {combination}:', ''] + pattern_lines[combination] + ['']
+            string_groups.append('\n'.join(group_lines))
+        string = '\n'.join(string_groups)
+        string_lines = string.split('\n')
+        found_text_cols = max([len(i) for i in string_lines])
+        found_text_lines = len(string_lines)
+        found_text = FileText(found_text_lines, found_text_cols, string)
+
+        for y, l in enumerate(string_lines):
+            for x, char in enumerate(l):
+                found_text.replace(x, y, char)
+    else:   # no lines contained any of the words in the search
+        string = "No instances of this text were found in file"
+        found_text = FileText(1, len(string), string)
+        for i, char in enumerate(string):
+            found_text.replace(i, 0, char)
+    
+    add_x = 0
+    add_y = 0
+
     while True:
         key = stdscr.getch()
+
+        x_changed = False
+        y_changed = False
 
         if key == 24: # ^x
             return
@@ -137,11 +192,70 @@ def find_in_file(stdscr, lines, cols, lines_start,
             if ask_last:
                 ask_to_quit(stdscr, lines, cols, 10, True)
 
+        elif key == 259: # up arrow
+            add_y -= 1
+            y_changed = True
+        elif key == 258: # down arrow
+            add_y += 1
+            y_changed = True
+        elif key == 261: # right arrow
+            add_x += 1
+            x_changed = True
+        elif key == 260: # left arrow
+            add_x -= 1
+            x_changed = True
+
         stdscr.clear()
         try:
-            stdscr.addstr(total_display)
+            stdscr.addstr(found_text.display(lines_start, lines_stop, cols_start, cols_stop))
         except Exception:
             raise Exception('Terminal window is too small')
+
+        # move cursor
+        move = True
+        y, x = stdscr.getyx()
+        new_x = x + add_x
+        new_y = y + add_y
+        if x_changed:
+            if new_x >= cols:
+                # scroll if possible
+                if len(file_text.grid) > (cols_start + new_x):
+                    cols_start += 1
+                    cols_stop += 1
+                    add_x -= 1
+                    new_x -= 1
+                else:
+                    move = False
+                    add_x -= 1
+                    new_x -= 1
+            elif new_x < 0:
+                if cols_start > 0:
+                    cols_start -= 1
+                    cols_stop -= 1
+                add_x += 1
+                new_x += 1
+        elif y_changed:
+            if new_y > lines - 1:
+                # scroll if possible
+                if len(file_text.grid[0]) > (lines_start + new_y):
+                    lines_start += 1
+                    lines_stop += 1
+                    add_y -= 1
+                    new_y -= 1
+                else:  # if cursor wants to go beyond file contents
+                    move = False
+                    add_y -= 1
+                    new_y -= 1
+            elif new_y < 0:
+                if lines_start > 0:
+                    lines_start -= 1
+                    lines_stop -= 1
+                add_y += 1
+                new_y += 1
+        
+        if move:
+            stdscr.move(new_y, new_x)
+
         stdscr.refresh()
         time.sleep(0.01)
 
@@ -309,11 +423,7 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
             real_user_secrets = ''
             with open('user_secrets.json', 'r') as f:
                 real_user_secrets = f.read()
-            with open('output', 'w') as f:
-                f.write(user_secrets)
             if decrypt(json.loads(user_secrets)["password"]) != decrypt(json.loads(real_user_secrets)["password"]) and os.path.isfile('user_secrets.json'):
-                with open('output', 'w') as f:
-                    f.write(user_secrets + '\n' + real_user_secrets)
                 while True:
                     key = stdscr.getch()
 
