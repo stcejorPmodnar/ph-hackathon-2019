@@ -1,1 +1,11 @@
-This is an example helpscreen
+usage:
+python[3] file-reader.py file.txt
+
+Keyboard shortcuts:
+^e - quit
+^t - find in file (^x to exit)
+
+Use arrow keys to move cursor.
+
+Moving cursor off screen will continue displaying
+file content if not all can fit in terminal window
