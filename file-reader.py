@@ -41,18 +41,6 @@ class FileText:
         return '\n'.join([''.join(line) for line in transposed])
 
 
-class Line:
-    def __init__(self, length):
-        self.chars = [' ' for _ in range(length)]
-    
-    def replace(self, index, char):
-        self.chars[index] = char
-    
-    @property
-    def display(self):
-        return ''.join(self.chars)
-
-
 def main(stdscr, file, encoding, color):
 
     # catch ^c
@@ -68,18 +56,19 @@ def main(stdscr, file, encoding, color):
 
     # display sign up screen if file size is over 1 kb
     if os.stat(abspath(file)).st_size > 1000:
-        with open(ASCII_DIR + '/email.txt', 'r') as f:
+        with open(ASCII_DIR + '/sign-up.txt', 'r') as f:
             popup_contents = f.read()
         popup_lines = popup_contents.split('\n')
 
-        dims = [len(file_lines), max([len(line) for line in file_lines])]
+        dims = [len(popup_lines), max([len(line) for line in popup_lines])]
         popup_text = FileText(*dims)
         
         for y, line in enumerate(popup_lines):
             for x, char in enumerate(line):
                 popup_text.replace(x, y, char)
 
-        sign_up_prompt(stdscr, curses.LINES, curses.COLS, popup_text)
+        sign_up_prompt(stdscr, curses.LINES, curses.COLS, popup_text,
+                       lines_start, lines_stop, cols_start, cols_stop)
 
     # read file
     binary = False
@@ -127,7 +116,7 @@ def main(stdscr, file, encoding, color):
         
         elif key == 20: # ^t (find in file)
             find_in_file(stdscr, curses.LINES, curses.COLS,
-                         lines_start, lines_stop, cols_start, cols_stop)
+                         lines_start, lines_stop, cols_start, cols_stop, file_text)
         
         elif key == 259: # up arrow
             add_y -= 1
