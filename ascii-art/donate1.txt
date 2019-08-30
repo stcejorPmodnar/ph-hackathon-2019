@@ -10,3 +10,4 @@ $                                   $
 $    Donations are appreciated!     $
 $                                   $
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+press q to exit
