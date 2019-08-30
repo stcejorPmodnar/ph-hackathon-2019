@@ -103,7 +103,7 @@ def find_in_file(stdscr, lines, cols, lines_start,
         except Exception:
             raise Exception('Terminal window is too small')
 
-        stdscr.move(lines - 1, current_space)
+        stdscr.move(len(file_text.grid[0]), current_space)
 
         stdscr.refresh()
 
