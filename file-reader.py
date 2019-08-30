@@ -79,29 +79,61 @@ def main(stdscr, file, encoding, color):
         pass
     signal.signal(signal.SIGINT, signal_handler)
 
+    lines_start = 0
+    lines_stop = curses.LINES
+    cols_start = 0
+    cols_stop = curses.COLS - 1
 
     # display sign up screen if file size is over 1 kb
     if os.stat(abspath(file)).st_size > 1000:
         with open(ASCII_DIR + '/email.txt', 'r') as f:
-            file_contents = f.read()
-        file_lines = file_contents.split('\n')
-    else:
-        # read file
-        binary = False
-        try:
-            with open(abspath(file), 'r', encoding=encoding) as f:
-                file_contents = f.read()
-        except UnicodeDecodeError:
-            with open(abspath(file), 'rb') as f:
-                file_contents = ' '.join(convert_to_binary(i, 16) for i in list(f.read()))
-            binary = True
+            popup_contents = f.read()
+        popup_lines = popup_contents.split('\n')
+
+        dims = [len(file_lines), max([len(line) for line in file_lines])]
+        popup_text = FileText(*dims)
         
-        # create FileText object with grid size exactly large enough to display entire file contents
-        if binary:
-            file_lines = [file_contents[i:i + curses.COLS - 1]
-                        for i in range(0, len(file_contents), curses.COLS - 1)]
-        else:
-            file_lines = file_contents.split('\n')
+        for y, line in enumerate(popup_lines):
+            for x, char in enumerate(line):
+                popup_text.replace(x, y, char)
+
+        stdscr.nodelay(1)
+        while True:
+            key = getch()
+
+            if key == 5: # ^e (quit)
+                ask_last = True
+                for i in range(10):
+                    if not ask_to_quit(i, False):
+                        ask_last = False
+                        break
+                if ask_last:
+                    ask_to_quit(10, True)
+            
+            elif key == 97:  # a
+                pass
+
+            elif key == 98:  # b
+                pass
+
+            time.sleep(0.01)
+    
+    # read file
+    binary = False
+    try:
+        with open(abspath(file), 'r', encoding=encoding) as f:
+            file_contents = f.read()
+    except UnicodeDecodeError:
+        with open(abspath(file), 'rb') as f:
+            file_contents = ' '.join(convert_to_binary(i, 16) for i in list(f.read()))
+        binary = True
+    
+    # create FileText object with grid size exactly large enough to display entire file contents
+    if binary:
+        file_lines = [file_contents[i:i + curses.COLS - 1]
+                    for i in range(0, len(file_contents), curses.COLS - 1)]
+    else:
+        file_lines = file_contents.split('\n')
     
     dims = [len(file_lines), max([len(line) for line in file_lines])]
     file_text = FileText(*dims)
@@ -189,15 +221,8 @@ def main(stdscr, file, encoding, color):
             stdscr.refresh()
             time.sleep(0.01)
 
-    lines_start = 0
-    lines_stop = curses.LINES
-    cols_start = 0
-    cols_stop = curses.COLS - 1
-
     add_x = 0
     add_y = 0
-    
-    stdscr.nodelay(1)
 
     while True:
         
