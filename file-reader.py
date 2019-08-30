@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import signal
+import webbrowser
 
 from separate_mainloops import ask_to_quit, find_in_file, sign_up_prompt, FileText
 
@@ -67,6 +68,39 @@ UTF-16 [a]\tASCII [b]\tUTF-8 [c]")
         stdscr.refresh()
         time.sleep(0.01)
 
+    # ask to open in browser
+    while True:
+        key = stdscr.getch()
+
+        if key == 5: # ^e (quit)
+            ask_last = True
+            for i in range(10):
+                if not ask_to_quit(stdscr, curses.LINES, curses.COLS, i, False):
+                    ask_last = False
+                    break
+            if ask_last:
+                ask_to_quit(stdscr, curses.LINES, curses.COLS, 10, True)
+        
+        elif key == 121:  # y
+            with open(file, 'r', encoding=encoding) as f:
+                file_contents = f.read()
+            html_file = file.split('.')[0] + '.html'
+            with open(html_file, 'w+') as f:
+                f.write(file_contents)
+            webbrowser.open('file://' + abspath(html_file))
+            break
+        
+        elif key == 110:  # n
+            break
+
+        stdscr.clear()
+        try:
+            stdscr.addstr('Would you like to open your file in your webbrowser as well? [y/n]')
+        except Exception:
+            raise Exception('Terminal window is too small')
+
+        stdscr.refresh()
+        time.sleep(0.01)
 
     # display sign up screen if file size is over 1 kb
     if os.stat(abspath(file)).st_size > 1000:
