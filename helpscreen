@@ -5,7 +5,7 @@ Keyboard shortcuts:
 ^e - quit
 ^t - find in file (^x to exit)
 
-Use arrow keys to move cursor.
+Use arrow keys to move cursor whenever not giving input.
 
 Moving cursor off screen will continue displaying
 file content if not all can fit in terminal window
