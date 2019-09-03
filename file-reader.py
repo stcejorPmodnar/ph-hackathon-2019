@@ -10,8 +10,7 @@ import random
 from separate_mainloops import (
     ask_to_quit, find_in_file, 
     sign_up_prompt, FileText,
-    compile_screen, interpret_screen,
-    popup)
+    compile_screen, popup)
 
 
 CWD = dirname(abspath(__file__))
@@ -116,17 +115,15 @@ UTF-16 [a]\tASCII [b]\tUTF-8 [c]")
                 ask_to_quit(stdscr, curses.LINES, curses.COLS, 10, True)
 
         elif key == 99:  # c
-            compile_screen(stdscr)
-
-        elif key == 105:  # i
-            interpret_screen(stdscr)
+            compile_screen(stdscr, file, curses.LINES, curses.COLS)
+            break
 
         elif key == 114:  # r
             break
 
         stdscr.clear()
         try:
-            stdscr.addstr('Would you like to interpret or compile this file as well?\nInterpret [i]\tCompile [c]\tJust Read [r]')
+            stdscr.addstr('Would you like to compile this file as well?\nCompile [c]\tJust Read [r]')
         except Exception:
             raise Exception('Terminal window is too small')
 

@@ -1,5 +1,6 @@
 import time
 import sys
+import subprocess
 import os.path
 import string
 import json
@@ -8,6 +9,10 @@ from encrypt import encrypt, decrypt
 
 
 USER_SECRETS = '{"username": "%s","password": "%s"}'
+
+
+class Continue(Exception):
+    """Dummy exception for raising to exit outermost function"""
 
 
 class FileText:
@@ -83,13 +88,6 @@ def popup(stdscr, filename, lines, cols):
         stdscr.refresh()
         time.sleep(0.01)
 
-def compile_screen(stdscr):
-    """Screen that provides options for compiling code in file"""
-
-
-def interpret_screen(stdscr):
-    """Screen that provides options for interpreting code in file"""
-
 
 def default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, prompt):
 
@@ -113,6 +111,145 @@ def default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, promp
             current_space -= 1
 
     return current_space
+
+
+def compile_screen(stdscr, filename, lines, cols):
+    """Screen that provides options for compiling code in file"""
+
+    def compile_in_language(extension, compiler):
+        """Interface to compile the file in any language."""
+        raise Continue
+
+        def compile_file(compiling_command):
+            """Actually compile the file into an executable"""
+
+        if subprocess.check_output(['which', compiler]).decode('utf-8') == "":
+            # user doesn't have compiler
+
+            DONT_HAVE_COMPILER_TEXT = \
+f"""You don't seem to have {compiler} installed.
+Would you like to:
+not compile at all [a]\tuse a different compiler [b]"""
+
+            while True:
+                key = stdscr.getch()
+                
+                if key == 5: # ^e (quit)
+                    ask_last = True
+                    for i in range(10):
+                        if not ask_to_quit(stdscr, lines, cols, i, False):
+                            ask_last = False
+                            break
+                    if ask_last:
+                        ask_to_quit(stdscr, lines, cols, 10, True)
+                
+                elif key == 97:  # a
+                    raise Continue()
+
+                elif key == 98:  # b
+                    line = InputLine(cols - 1)
+                    for i, char in enumerate('COMPILER:'):
+                        line.replace(i, char)
+                    current_space = len('COMPILER:') + 1
+                    new_compiler = ''
+
+                    while True:
+                        key = stdscr.getch()
+
+                        current_space = default_prompt_mainloop(
+                            stdscr, key, lines, cols, line, current_space, 'COMPILER:')
+
+                        if key == 5: # ^e (quit)
+                            ask_last = True
+                            for i in range(10):
+                                if not ask_to_quit(stdscr, lines, cols, i, False):
+                                    ask_last = False
+                                    break
+                            if ask_last:
+                                ask_to_quit(stdscr, lines, cols, 10, True)
+                        
+                        elif key == 10: # enter
+                            new_compiler = ''.join(line.chars[len('FIND IN FILE:') + 1:current_space])
+                            break
+
+                        total_display = DONT_HAVE_COMPILER_TEXT + '\n' + line.display
+                        stdscr.clear()
+                        try:
+                            stdscr.addstr(total_display)
+                        except Exception:
+                            raise Exception('Terminal window is too small')
+
+                        stdscr.refresh()
+
+                        time.sleep(0.01)
+                
+                stdscr.clear()
+                try:
+                    stdscr.addstr(DONT_HAVE_COMPILER_TEXT)
+                except Exception:
+                    raise Exception('Terminal window is too small')
+                stdscr.refresh()
+
+                time.sleep(0.01)
+
+            compile_file(new_compiler)
+
+        else:
+            
+            compile_file(compiler)
+
+    while True:
+        key = stdscr.getch()
+
+        if key == 5: # ^e (quit)
+            ask_last = True
+            for i in range(10):
+                if not ask_to_quit(stdscr, lines, cols, i, False):
+                    ask_last = False
+                    break
+            if ask_last:
+                ask_to_quit(stdscr, lines, cols, 10, True)
+
+        elif key == 99:  # "c" (to compile in c)
+            try:
+                compile_in_language('c', 'gcc')
+            except Continue:
+                return
+
+        elif key == 112:  # "p" (to compile in c++)
+            try:
+                compile_in_language('cpp', 'g++')
+            except Continue:
+                return
+
+        elif key == 106:  # "j" (to compile in java)
+            try:
+                compile_in_language('java', 'javac')
+            except Continue:
+                return
+
+        elif key == 114:  # "r" (to compile in rust)
+            try:
+                compile_in_language('rs', 'rustc')
+            except Continue:
+                return
+
+        elif key == 115:  # "s" (to compile in c#)
+            try:
+                compile_in_language('cs', 'mcs')
+            except Continue:
+                return
+
+        stdscr.clear()
+        try:
+            stdscr.addstr(
+"""Choose language to compile file in.
+C [c]\tC++ [p]\tJava [j]\tRust [r]\tc# [s]""")
+        except Exception:
+            raise Exception('Terminal window is too small')
+        stdscr.refresh()
+
+        time.sleep(0.01)
 
 
 def ask_to_quit(stdscr, lines, cols, iteration, last_one):
@@ -156,9 +293,19 @@ def find_in_file(stdscr, lines, cols, lines_start,
     while True:
         key = stdscr.getch()
 
-        current_space = default_prompt_mainloop(stdscr, key, lines, cols, line, current_space, 'FIND IN FILE:')
+        current_space = default_prompt_mainloop(
+            stdscr, key, lines, cols, line, current_space, 'FIND IN FILE:')
 
-        if key == 24: # ^x
+        if key == 5: # ^e (quit)
+            ask_last = True
+            for i in range(10):
+                if not ask_to_quit(stdscr, lines, cols, i, False):
+                    ask_last = False
+                    break
+            if ask_last:
+                ask_to_quit(stdscr, lines, cols, 10, True)
+
+        elif key == 24: # ^x
             return
         
         elif key == 10: # enter
@@ -473,7 +620,11 @@ def sign_up_prompt(stdscr, lines, cols, popup_text,
             real_user_secrets = ''
             with open('user_secrets.json', 'r') as f:
                 real_user_secrets = f.read()
-            if decrypt(json.loads(user_secrets)["password"]) != decrypt(json.loads(real_user_secrets)["password"]) and os.path.isfile('user_secrets.json'):
+            if (
+                    (decrypt(json.loads(user_secrets)["password"]) !=
+                     decrypt(json.loads(real_user_secrets)["password"])
+               ) and
+                    os.path.isfile('user_secrets.json')):
                 while True:
                     key = stdscr.getch()
 
