@@ -8,3 +8,5 @@ __pycache__
 user_secrets.json
 pass
 quick.html
+quick.cpp
+a.out

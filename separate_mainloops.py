@@ -46,6 +46,34 @@ class InputLine:
         return ''.join(self.chars)
 
 
+def ask_to_quit(stdscr, lines, cols, iteration, last_one):
+    """Annoying prompt for asking whether or not a
+       user would like to quit the application"""
+
+    while True:
+        key = stdscr.getch()
+        if key == 121: # y
+            if last_one:
+                sys.exit()
+            else:
+                return True
+        elif key == 110: # n
+            return False
+
+        stdscr.clear()
+        base_string = 'Are you sure you want to quit? [y/n]'
+        added_sures = ''.join(['you\'re sure ' for _ in range(iteration)])
+        final_string = base_string[:13] + added_sures + base_string[13:]
+        final_lines = [final_string[i:i + cols] for i in range(0, len(final_string), cols)]
+        try:
+            stdscr.addstr('\n'.join(final_lines))
+        except Exception:
+            raise Exception('Terminal window is too small')
+        stdscr.refresh()
+
+        time.sleep(0.01)
+
+
 def popup(stdscr, filename, lines, cols):
     """Displays popup until q is pressed"""
 
@@ -118,20 +146,81 @@ def compile_screen(stdscr, filename, lines, cols):
 
     def compile_in_language(extension, compiler):
         """Interface to compile the file in any language."""
-        raise Continue
+
+        error = False
 
         def compile_file(compiling_command):
             """Actually compile the file into an executable"""
 
-        if subprocess.check_output(['which', compiler]).decode('utf-8') == "":
-            # user doesn't have compiler
+            # check if compiler exists
+            try:
+                try:
+                    subprocess.check_output([compiling_command])
+                except subprocess.CalledProcessError:
+                    pass
+            except FileNotFoundError:
+                while True:
+                    key = stdscr.getch()
 
-            DONT_HAVE_COMPILER_TEXT = \
-f"""You don't seem to have {compiler} installed.
-Would you like to:
-not compile at all [a]\tuse a different compiler [b]"""
+                    if key == 5: # ^e (quit)
+                        ask_last = True
+                        for i in range(10):
+                            if not ask_to_quit(stdscr, lines, cols, i, False):
+                                ask_last = False
+                                break
+                        if ask_last:
+                            ask_to_quit(stdscr, lines, cols, 10, True)
+                    
+                    elif key == 113:  # "q"
+                        raise Continue
+
+                    stdscr.clear()
+                    try:
+                        stdscr.addstr("No such compiler. Press 'q' to continue to viewing file.")
+                    except Exception:
+                        raise Exception('Terminal window is too small')
+                    stdscr.refresh()
+
+                    time.sleep(0.01)
+
+            if filename.split('.')[-1] != extension:
+                # file has incorrect extension
+
+                # copy file contents into new file with correct extension
+                with open(filename, 'r') as f:
+                    contents = f.read()
+
+                new_filename = filename.split('.')[0] + f'.{extension}'
+
+                with open(new_filename, 'w+') as f:
+                    f.write(contents)
+
+                # compile file using compiler
+                try:
+                    compile_output = subprocess.check_output([compiler, new_filename]).decode('utf-8')
+                    error = False
+                except subprocess.CalledProcessError as e:
+                    compile_output = e.returncode
+                    error = True
+            else:
+                try:
+                    compile_output = subprocess.check_output([compiler, filename]).decode('utf-8')
+                    error = False
+                except subprocess.CalledProcessError as e:
+                    compile_output = e.returncode
+                    error = True
+            
+            if error:
+                display = f"Code compilation was unsuccessful. Command returned the following erros:\n{compile_output}.\n\
+Press 'q' to continue."
+            else:
+                if compile_output == "":
+                    display = "Code successfully compiled with zero errors.\nPress 'q' to continue."
+                else:
+                    display = f"Code compiled with following output:\n{compile_output}.\nPress 'q' to continue."
 
             while True:
+
                 key = stdscr.getch()
                 
                 if key == 5: # ^e (quit)
@@ -143,60 +232,96 @@ not compile at all [a]\tuse a different compiler [b]"""
                     if ask_last:
                         ask_to_quit(stdscr, lines, cols, 10, True)
                 
-                elif key == 97:  # a
-                    raise Continue()
+                elif key == 113:  # q
+                    raise Continue
 
-                elif key == 98:  # b
-                    line = InputLine(cols - 1)
-                    for i, char in enumerate('COMPILER:'):
-                        line.replace(i, char)
-                    current_space = len('COMPILER:') + 1
-                    new_compiler = ''
-
-                    while True:
-                        key = stdscr.getch()
-
-                        current_space = default_prompt_mainloop(
-                            stdscr, key, lines, cols, line, current_space, 'COMPILER:')
-
-                        if key == 5: # ^e (quit)
-                            ask_last = True
-                            for i in range(10):
-                                if not ask_to_quit(stdscr, lines, cols, i, False):
-                                    ask_last = False
-                                    break
-                            if ask_last:
-                                ask_to_quit(stdscr, lines, cols, 10, True)
-                        
-                        elif key == 10: # enter
-                            new_compiler = ''.join(line.chars[len('FIND IN FILE:') + 1:current_space])
-                            break
-
-                        total_display = DONT_HAVE_COMPILER_TEXT + '\n' + line.display
-                        stdscr.clear()
-                        try:
-                            stdscr.addstr(total_display)
-                        except Exception:
-                            raise Exception('Terminal window is too small')
-
-                        stdscr.refresh()
-
-                        time.sleep(0.01)
-                
                 stdscr.clear()
                 try:
-                    stdscr.addstr(DONT_HAVE_COMPILER_TEXT)
+                    stdscr.addstr(display)
                 except Exception:
                     raise Exception('Terminal window is too small')
+
                 stdscr.refresh()
 
                 time.sleep(0.01)
 
-            compile_file(new_compiler)
-
-        else:
-            
+        try:
+            subprocess.check_output(['which', compiler]).decode('utf-8')
             compile_file(compiler)
+        except subprocess.CalledProcessError as e:
+            # user doesn't have compiler
+
+            DONT_HAVE_COMPILER_TEXT = \
+f"""You don't seem to have {compiler} installed.
+Would you like to:
+not compile at all [a]\tuse a different compiler [b]"""
+
+            def ask_for_compiler():
+
+                while True:
+                    key = stdscr.getch()
+                    
+                    if key == 5: # ^e (quit)
+                        ask_last = True
+                        for i in range(10):
+                            if not ask_to_quit(stdscr, lines, cols, i, False):
+                                ask_last = False
+                                break
+                        if ask_last:
+                            ask_to_quit(stdscr, lines, cols, 10, True)
+                    
+                    elif key == 97:  # a
+                        raise Continue()
+
+                    elif key == 98:  # b
+                        line = InputLine(cols - 1)
+                        for i, char in enumerate('COMPILER:'):
+                            line.replace(i, char)
+                        current_space = len('COMPILER:') + 1
+                        new_compiler = ''
+
+                        while True:
+                            key = stdscr.getch()
+
+                            current_space = default_prompt_mainloop(
+                                stdscr, key, lines, cols, line, current_space, 'COMPILER:')
+
+                            if key == 5: # ^e (quit)
+                                ask_last = True
+                                for i in range(10):
+                                    if not ask_to_quit(stdscr, lines, cols, i, False):
+                                        ask_last = False
+                                        break
+                                if ask_last:
+                                    ask_to_quit(stdscr, lines, cols, 10, True)
+                            
+                            elif key == 10: # enter
+                                new_compiler = ''.join(line.chars[len('COMPILER:') + 1:current_space])
+                                return new_compiler
+
+                            total_display = DONT_HAVE_COMPILER_TEXT + '\n' + line.display
+                            stdscr.clear()
+                            try:
+                                stdscr.addstr(total_display)
+                            except Exception:
+                                raise Exception('Terminal window is too small')
+
+                            stdscr.refresh()
+
+                            time.sleep(0.01)
+                    
+                    stdscr.clear()
+                    try:
+                        stdscr.addstr(DONT_HAVE_COMPILER_TEXT)
+                    except Exception:
+                        raise Exception('Terminal window is too small')
+                    stdscr.refresh()
+
+                    time.sleep(0.01)
+
+            new_compiler = ask_for_compiler()
+
+            compile_file(new_compiler)
 
     while True:
         key = stdscr.getch()
@@ -252,33 +377,6 @@ C [c]\tC++ [p]\tJava [j]\tRust [r]\tc# [s]""")
         time.sleep(0.01)
 
 
-def ask_to_quit(stdscr, lines, cols, iteration, last_one):
-    """Annoying prompt for asking whether or not a
-       user would like to quit the application"""
-
-    while True:
-        key = stdscr.getch()
-        if key == 121: # y
-            if last_one:
-                sys.exit()
-            else:
-                return True
-        elif key == 110: # n
-            return False
-
-        stdscr.clear()
-        base_string = 'Are you sure you want to quit? [y/n]'
-        added_sures = ''.join(['you\'re sure ' for _ in range(iteration)])
-        final_string = base_string[:13] + added_sures + base_string[13:]
-        final_lines = [final_string[i:i + cols] for i in range(0, len(final_string), cols)]
-        try:
-            stdscr.addstr('\n'.join(final_lines))
-        except Exception:
-            raise Exception('Terminal window is too small')
-        stdscr.refresh()
-
-        time.sleep(0.01)
-
 def find_in_file(stdscr, lines, cols, lines_start,
                  lines_stop, cols_start, cols_stop, file_text):
     """Feature to find all instances of a pattern in a file"""
@@ -322,7 +420,7 @@ def find_in_file(stdscr, lines, cols, lines_start,
         if len(file_text.grid[0]) > lines - 1:
             stdscr.move(lines - 1, current_space)
         else:
-            stdscr.move(len(file_text.grid[0]))
+            stdscr.move(len(file_text.grid[0]), current_space)
 
         stdscr.refresh()
 
