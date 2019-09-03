@@ -198,6 +198,9 @@ UTF-16 [a]\tASCII [b]\tUTF-8 [c]")
             if ask_last:
                 ask_to_quit(stdscr, curses.LINES, curses.COLS, 10, True)
         
+        elif key == 2:  # ^b (compile)
+            compile_screen(stdscr, file, curses.LINES, curses.COLS)
+
         elif key == 20: # ^t (find in file)
             find_in_file(stdscr, curses.LINES, curses.COLS,
                          lines_start, lines_stop, cols_start, cols_stop, file_text)
