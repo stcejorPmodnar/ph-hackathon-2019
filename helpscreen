@@ -4,6 +4,7 @@ python[3] file-reader.py file.txt
 Keyboard shortcuts:
 ^e - quit
 ^t - find in file (^x to exit)
+^b - compile file
 
 Use arrow keys to move cursor whenever not giving input.
 
