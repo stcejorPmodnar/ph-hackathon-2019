@@ -1,6 +1,7 @@
 # text-file-reader
 
 Exactly what it sounds like.
+
 *This is not meant for practical use. It began as a hackathon submission, but I missed the deadline, so now I'm finishing it to be happy. The theme of the hackathon was "Overengineered UI", so it's not meant to be easy to use.*
 
 # Installation
@@ -52,5 +53,5 @@ It should in theory work on linux or any of its distros,
 but I doubt it since I have little experience with the OS, and I haven't done any testing with it.
 
 You should have python 3.x installed, but I've yet to test it with anything lower than 3.7.4, 
-and I think there are some changed between python 3.6 and 3.7 in multiline string formatting, 
+and I think there are some changes between python 3.6 and 3.7 in multiline string formatting, 
 which (as you can imagine) was very important to this project.
