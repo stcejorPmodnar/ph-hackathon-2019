@@ -431,7 +431,7 @@ def find_in_file(stdscr, lines, cols, lines_start,
     pattern_lines = {}
     words = pattern.split(' ')
     combinations = []
-    for n in range(len(words)):
+    for n in range(1, len(words) + 1):
         groups = [[words[i:i + n] for i in range(x, len(words), n)] for x in range(n)]
         for group in groups:
             for g in group:
