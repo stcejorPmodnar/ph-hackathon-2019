@@ -12,19 +12,29 @@ Exactly what it sounds like.
 
 ## Install with pip
 
-*Coming soon*
+*The better option in my opinion*
+
+```bash
+pip install text-file-reader
+python -m text-file-reader  # add files to ~/bin
+chmod +x ~/bin/text-file-reader  # give permission to main executable
+```
 
 # Usage
 
 ## Startup
 
-As of right now, it's just
+### Installed with git
 
 ```python[3] file-reader.py file.txt```
 
 With `file.txt` being the file you want to read.
 
 You can include the flag `-h` if you want to see the helpscreen.
+
+### Installed with pip
+
+Siplmy use the command ```text-file-reader file.txt```
 
 ## Interface
 
@@ -42,15 +52,11 @@ You will get an error if your terminal window is too small to display any of the
 
 # Contribute
 
-Though I wouldn't mind any pull requests, wait for the first stable release to contribute.
+I don't mind pull requests, but I'm done with this project, so don't expect anything.
 
-# Requirements
+# OS Compatability and Requirements
 
-Because of the compile option, this likely won't work on windows, 
-so I won't even bother to add stuff about installing windows-curses to the setup.py.
-
-It should in theory work on linux or any of its distros, 
-but I doubt it since I have little experience with the OS, and I haven't done any testing with it.
+**This is only usable on macos**, and I have no plans of making it compatible on windows or linux.
 
 You should have python 3.x installed, but I've yet to test it with anything lower than 3.7.4, 
 and I think there are some changes between python 3.6 and 3.7 in multiline string formatting, 
