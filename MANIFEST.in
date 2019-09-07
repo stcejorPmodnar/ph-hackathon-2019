@@ -1,0 +1,2 @@
+include text-file-reader/helpscreen
+recursive-include text-file-reader/ascii-art *

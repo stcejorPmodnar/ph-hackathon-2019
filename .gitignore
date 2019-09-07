@@ -10,3 +10,7 @@ pass
 quick.html
 quick.cpp
 a.out
+build
+dist
+text_file_reader.egg-info
+venv

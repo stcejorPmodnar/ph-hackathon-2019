@@ -15,7 +15,7 @@ from separate_mainloops import (
 
 CWD = dirname(abspath(__file__))
 ASCII_DIR = CWD + '/ascii-art'
-POPUPS = ['ascii-art/popups/' + i for i in os.listdir(ASCII_DIR + '/popups')]
+POPUPS = [f'{CWD}/ascii-art/popups/' + i for i in os.listdir(ASCII_DIR + '/popups')]
 
 
 def convert_to_binary(i, byte_size):
